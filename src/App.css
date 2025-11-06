@@ -1,0 +1,12 @@
+/* 🔥 Custom warning toast style override */
+.Toastify__toast--warning {
+  background-color: #f7cdcd !important; /* bright red background */
+  color: #303030 !important;               /* black text */
+  font-weight: 600;
+  border-left: 6px solid #000;          /* optional: adds visual accent */
+}
+
+/* Optional: make progress bar black for contrast */
+.Toastify__progress-bar--warning {
+  background: #ff0000 !important;
+}
