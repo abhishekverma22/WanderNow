@@ -8,8 +8,12 @@ import {
 } from "../constant/option";
 import "../App.css";
 import { sendMessageToGemini } from "../services/AiModel";
+import LoginDialog from "./LoginDialog";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "../services/FireBaseConfig";
+import { useNavigate } from "react-router-dom";
 
-// 🔹 Generate AI Prompt from formData
+// Generate AI Prompt from formData
 const getFinalPrompt = (formData) => {
   const { city, country, destination, numberOfDays, traveler, budget } =
     formData;
@@ -17,12 +21,16 @@ const getFinalPrompt = (formData) => {
     .replace("{country}", country || "Unknown Country")
     .replace("{destination}", destination || "Unknown Destination")
     .replace("{numberOfDays}", numberOfDays || 1)
-    .replace("{traveler}", traveler || "1 Person")
+    .replace("{traveler}", traveler?.title || "Solo")
+    .replace("{people}", traveler?.people || "1 Person")
     .replace("{budget}", budget || "Standard");
 };
 
 const CreateTrip = () => {
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [openDailog, setOpenDailog] = useState(false);
+  const navigate = useNavigate();
 
   const handleInputChange = (name, value) => {
     setFormData((prev) => ({
@@ -30,50 +38,99 @@ const CreateTrip = () => {
       [name]: value,
     }));
   };
-const handleGenerateTrip = async () => {
-  const { city, country, destination, numberOfDays, budget, traveler } = formData;
 
-  // Validate input
-  if (!city || !country || !destination || !numberOfDays || !budget || !traveler) {
-    toast.warning("✈️ Please share trip details before we take off 🚀", {
-      position: "top-right",
-      autoClose: 4000,
-      theme: "colored",
-      transition: Bounce,
-    });
-    return;
-  }
+  const handleGenerateTrip = async () => {
+    const user = localStorage.getItem("user");
 
-  // Generate final prompt
-  const FINAL_PROMPT = getFinalPrompt(formData);
+    if (!user) {
+      setOpenDailog(true);
+      return;
+    }
 
-  try {
-    // Call Gemini AI
-    const resultText = await sendMessageToGemini(FINAL_PROMPT);
+    const { city, country, destination, numberOfDays, budget, traveler } =
+      formData;
 
-    // Log response in console only
-    console.log("Gemini Response:", resultText);
+    // Validate input
+    if (
+      !city ||
+      !country ||
+      !destination ||
+      !numberOfDays ||
+      !budget ||
+      !traveler
+    ) {
+      toast.warning("✈️ Please share trip details before we take off 🚀", {
+        position: "top-right",
+        autoClose: 4000,
+        theme: "colored",
+        transition: Bounce,
+      });
+      return;
+    }
 
-    // Inform user
-    toast.success(
-      "🌍 Your personalized trip is ready! Check console for details.",
-      {
+    // Generate final prompt
+    const FINAL_PROMPT = getFinalPrompt(formData);
+
+    console.log("📝 Sending prompt to Gemini:", FINAL_PROMPT);
+
+    setLoading(true);
+
+    try {
+      // Call Gemini AI
+      const resultText = await sendMessageToGemini(FINAL_PROMPT);
+
+      // Log response in console
+      console.log("✅ Gemini Response:", resultText);
+      saveAiTrip(resultText);
+
+      // Check if we got a valid response
+      if (resultText && !resultText.includes("⚠️")) {
+        toast.success(
+          "🌍 Your personalized trip is ready! Check console for details.",
+          {
+            position: "bottom-right",
+            autoClose: 4000,
+            theme: "colored",
+            transition: Bounce,
+          }
+        );
+      } else {
+        toast.error(resultText || "⚠️ No response from Gemini", {
+          position: "bottom-right",
+          autoClose: 5000,
+          theme: "colored",
+          transition: Bounce,
+        });
+      }
+    } catch (err) {
+      console.error("❌ Error generating trip:", err);
+      toast.error("⚠️ Something went wrong while generating your trip.", {
         position: "bottom-right",
         autoClose: 4000,
         theme: "colored",
         transition: Bounce,
-      }
-    );
-  } catch (err) {
-    console.error("Error generating trip:", err);
-    toast.error("⚠️ Something went wrong while generating your trip.", {
-      position: "bottom-right",
-      autoClose: 4000,
-      theme: "colored",
-      transition: Bounce,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // save response in firestore
+  const user = JSON.parse(localStorage.getItem("user"));
+  const saveAiTrip = async (tripData) => {
+    const docID = Date.now().toString();
+    const travelerType = formData.traveler.title.toLowerCase();
+
+    await setDoc(doc(db, "AI_TRIPS", docID), {
+      userSelection: formData,
+      tripData: tripData,
+      userEmail: user.email,
+      userName: user.name,
+      userIMG: user.picture,
     });
-  }
-};
+
+    navigate(`/view-trip/${travelerType}/${docID}`);
+  };
 
   return (
     <div
@@ -114,19 +171,22 @@ const handleGenerateTrip = async () => {
               type="text"
               placeholder="Enter City..."
               onChange={(e) => handleInputChange("city", e.target.value)}
-              className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base"
+              disabled={loading}
+              className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <input
               type="text"
               placeholder="Enter Country..."
               onChange={(e) => handleInputChange("country", e.target.value)}
-              className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base"
+              disabled={loading}
+              className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <input
               type="text"
               placeholder="Enter Destination Name..."
               onChange={(e) => handleInputChange("destination", e.target.value)}
-              className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base"
+              disabled={loading}
+              className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </motion.div>
@@ -149,7 +209,8 @@ const handleGenerateTrip = async () => {
             onChange={(e) =>
               handleInputChange("numberOfDays", Number(e.target.value))
             }
-            className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base"
+            disabled={loading}
+            className="border border-gray-300 w-full p-3 rounded-md bg-white text-gray-800 placeholder:text-gray-500 focus:ring-2 focus:ring-blue-400 outline-none transition text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
           />
         </motion.div>
 
@@ -167,13 +228,15 @@ const handleGenerateTrip = async () => {
             {SelectBudgetOption.map((item) => (
               <motion.div
                 key={item.title}
-                onClick={() => handleInputChange("budget", item.title)}
+                onClick={() =>
+                  !loading && handleInputChange("budget", item.title)
+                }
                 className={`p-5 bg-black/40 border border-white/20 rounded-xl cursor-pointer text-center space-y-2 shadow-lg transition ${
                   formData.budget === item.title
                     ? "border-8 border-amber-600"
                     : ""
-                }`}
-                whileHover={{ scale: 1.05 }}
+                } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                whileHover={!loading ? { scale: 1.05 } : {}}
               >
                 <div className="flex justify-center">{item.icon}</div>
                 <h2 className="text-base sm:text-lg font-semibold text-white drop-shadow-md">
@@ -198,13 +261,19 @@ const handleGenerateTrip = async () => {
             {SelectTravelsList.map((item) => (
               <motion.div
                 key={item.id}
-                onClick={() => handleInputChange("traveler", item.people)}
+                onClick={() =>
+                  !loading &&
+                  handleInputChange("traveler", {
+                    title: item.title,
+                    people: item.people,
+                  })
+                }
                 className={`p-5 bg-black/40 border border-white/20 rounded-xl hover:bg-black/30 cursor-pointer text-center space-y-2 shadow-lg transition ${
-                  formData.traveler === item.people
+                  formData.traveler?.title === item.title
                     ? "border-8 border-amber-600"
                     : ""
-                }`}
-                whileHover={{ scale: 1.05 }}
+                } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                whileHover={!loading ? { scale: 1.05 } : {}}
               >
                 <div className="flex justify-center">{item.icon}</div>
                 <h2 className="text-base sm:text-lg font-semibold text-white drop-shadow-md">
@@ -214,22 +283,61 @@ const handleGenerateTrip = async () => {
             ))}
           </div>
         </motion.div>
+
         {/* Generate Button */}
         <motion.div className="flex items-center justify-center pt-6">
           <motion.button
-            whileHover={{
-              boxShadow: "0 0 20px rgba(59,130,246,0.6)",
-              backgroundColor: "rgba(37,99,235,0.8)",
-            }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={
+              !loading
+                ? {
+                    boxShadow: "0 0 20px rgba(59,130,246,0.6)",
+                    backgroundColor: "rgba(37,99,235,0.8)",
+                  }
+                : {}
+            }
+            whileTap={!loading ? { scale: 0.95 } : {}}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="px-8 py-3 sm:px-10 sm:py-4 bg-blue-500/50 text-sm sm:text-lg text-white font-semibold rounded-full shadow-md border border-blue-400/40 hover:bg-blue-600/90 focus:ring-4 focus:ring-blue-400/40 transition-all"
+            className="px-8 py-3 sm:px-10 sm:py-4 bg-blue-500/50 text-sm sm:text-lg text-white font-semibold rounded-full shadow-md border border-blue-400/40 hover:bg-blue-600/90 focus:ring-4 focus:ring-blue-400/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleGenerateTrip}
+            disabled={loading}
           >
-            Generate Trip ✈️
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <svg
+                  className="animate-spin h-5 w-5"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Generating...
+              </span>
+            ) : (
+              "Generate Trip ✈️"
+            )}
           </motion.button>
         </motion.div>
       </div>
+
+      {/* Dialog */}
+      <LoginDialog
+        open={openDailog}
+        onClose={() => setOpenDailog(false)}
+        onLoginSuccess={handleGenerateTrip}
+      />
 
       <ToastContainer
         position="bottom-right"

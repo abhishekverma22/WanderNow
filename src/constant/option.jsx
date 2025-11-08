@@ -59,8 +59,72 @@ export const SelectBudgetOption = [
     icon: <Diamond className="w-6 h-6 text-purple-500" />,
   },
 ];
+export const AI_PROMPT = `
+You are an assistant that outputs **only valid JSON**.
+Do not add any explanations or extra text.
+Generate a travel plan with the following details:
 
+City: {city}
+Country: {country}
+Destination place: {destination}
+Number of days: {numberOfDays}
+Traveler type: {traveler}
+Budget: {budget}
 
+Requirements:
+1. Provide hotels options list with:
+   - HotelName
+   - HotelAddress
+   - Price
+   - HotelImageURL (realistic direct image URL from Google or Google Maps)
+   - GeoCoordinates
+   - Rating
+   - Descriptions
+2. Suggest itinerary for each day including:
+   - PlaceName
+   - PlaceDetails
+   - PlaceImageURL (realistic direct image URL)
+   - GeoCoordinates
+   - TicketPrice
+   - TimeToSpend
+   - BestTimeToVisit
+3. Ensure all JSON syntax is valid and consistent.
+4. Provide realistic coordinates, prices, and ratings.
+5. Avoid placeholder images or fake URLs.
+6. No explanations, only return JSON.
 
+Example JSON structure to follow:
 
- export const AI_PROMPT = `Genrate travel plan for location : City is {city}, Country is {country}, destination place is {destination} , {numberOfDays} days for {traveler} with {budget} budget, Give me hotels options list with HotelName, Hotel address price, hotel image url geo coordinates, rating descriptions and suggest itinery with placename, place destils place image url geo cordinates and ticket price , time travel each of the location for 3 days  plan with best time  to visit in JSON formate`
+{
+  "location": "string",
+  "duration_days": "number",
+  "travelers": "string",
+  "hotels": [
+    {
+      "hotel_name": "string",
+      "hotel_address": "string",
+      "price": "string",
+      "hotel_image_url": "string",
+      "geo_coordinates": "string",
+      "rating": "string",
+      "description": "string"
+    }
+  ],
+  "itinerary": [
+    {
+      "day": "number",
+      "theme": "string",
+      "plan": [
+        {
+          "place_name": "string",
+          "place_details": "string",
+          "ticket_price_inr": "string",
+          "time_to_spend": "string",
+          "best_time_to_visit": "string",
+          "place_image_url": "string"
+        }
+      ]
+    }
+  ]
+}
+`;
