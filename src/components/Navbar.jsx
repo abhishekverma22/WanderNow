@@ -4,26 +4,31 @@ import { Link, useNavigate } from "react-router-dom";
 import LoginDialog from "../pages/LoginDialog";
 
 const Navbar = () => {
-  const navigate = useNavigate(); // Add navigate
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const dropdownRef = useRef();
 
-  // Load user from localStorage on mount
+  // 🧠 Load user from localStorage on mount
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
-    if (storedUser) setUser(storedUser);
+    try {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (storedUser) setUser(storedUser);
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+    }
   }, []);
 
+  // 🧹 Logout user
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
     setDropdownOpen(false);
-    navigate("/"); // Redirect to home page after logout
+    navigate("/");
   };
 
-  // Close dropdown if clicked outside
+  // 🖱️ Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -34,12 +39,28 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Called after successful login
+  // ✅ Called after successful login
   const handleLoginSuccess = (userData) => {
     localStorage.setItem("user", JSON.stringify(userData));
-    setUser(userData); // immediately update state
-    setLoginOpen(false); // close dialog
+    setUser(userData);
+    setLoginOpen(false);
   };
+
+  // ✅ Preload user image (reduces flicker)
+  useEffect(() => {
+    if (user?.picture || user?.photoURL) {
+      const img = new Image();
+      img.src = user.picture || user.photoURL;
+    }
+  }, [user]);
+
+  // ✅ Determine image URL safely
+  const imageUrl =
+    user?.picture?.startsWith("http")
+      ? user.picture
+      : user?.photoURL?.startsWith("http")
+      ? user.photoURL
+      : "/default-profile.png";
 
   return (
     <>
@@ -50,7 +71,7 @@ const Navbar = () => {
         className="fixed w-full z-50 mt-4"
       >
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3 flex items-center justify-between bg-black/50 backdrop-blur-md rounded-lg">
-          {/* Logo */}
+          {/* 🌍 Logo */}
           <Link to="/" className="flex items-center gap-2">
             <motion.div
               whileHover={{ scale: 1.05, transition: { duration: 0.3, ease: "easeInOut" } }}
@@ -63,16 +84,18 @@ const Navbar = () => {
             </motion.div>
           </Link>
 
-          {/* User Section */}
+          {/* 👤 User Section */}
           {user ? (
             <div className="relative" ref={dropdownRef}>
               <img
-                src={user.picture || "/default-profile.png"}
-                alt={user.name || "User"}
-                className="w-10 h-10 rounded-full cursor-pointer border-2 border-white"
+                src={imageUrl}
+                alt={user?.name || "User"}
+                className="w-10 h-10 rounded-full cursor-pointer border-2 border-white object-cover"
                 onClick={() => setDropdownOpen((prev) => !prev)}
+                onError={(e) => (e.target.src = "/default-profile.png")}
               />
 
+              {/* Dropdown */}
               <AnimatePresence>
                 {dropdownOpen && (
                   <motion.div
@@ -116,11 +139,11 @@ const Navbar = () => {
         </div>
       </motion.nav>
 
-      {/* Login Dialog */}
+      {/* 🪟 Login Dialog */}
       <LoginDialog
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
-        onLoginSuccess={handleLoginSuccess} // Pass userData
+        onLoginSuccess={handleLoginSuccess}
       />
     </>
   );

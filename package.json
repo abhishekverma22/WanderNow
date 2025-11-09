@@ -17,8 +17,8 @@
     "@tailwindcss/vite": "^4.1.16",
     "axios": "^1.13.2",
     "firebase": "^12.5.0",
+    "framer-motion": "^12.23.24",
     "lucide-react": "^0.552.0",
-    "motion": "^12.23.24",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-icons": "^5.5.0",
@@ -38,7 +38,7 @@
     "vite": "^7.1.7"
   },
   "optionalDependencies": {
-  "@rollup/rollup-linux-x64-gnu": "4.52.5",
-  "@esbuild/linux-x64": "0.25.12"
-}
+    "@esbuild/linux-x64": "0.25.12",
+    "@rollup/rollup-linux-x64-gnu": "4.52.5"
+  }
 }

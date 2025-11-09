@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 const UserInfo = ({ tripDetails }) => {
   if (!tripDetails) return null;
 
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
