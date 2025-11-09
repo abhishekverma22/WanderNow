@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LoginDialog from "../pages/LoginDialog";
 
 const Navbar = () => {
+  const navigate = useNavigate(); // Add navigate
   const [user, setUser] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -19,6 +20,7 @@ const Navbar = () => {
     localStorage.removeItem("user");
     setUser(null);
     setDropdownOpen(false);
+    navigate("/"); // Redirect to home page after logout
   };
 
   // Close dropdown if clicked outside
@@ -51,10 +53,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <motion.div
-              whileHover={{
-                scale: 1.05,
-                transition: { duration: 0.3, ease: "easeInOut" },
-              }}
+              whileHover={{ scale: 1.05, transition: { duration: 0.3, ease: "easeInOut" } }}
               className="flex items-center gap-2"
             >
               <img src="/logo.svg" alt="logo" className="w-5 sm:w-8 h-5 sm:h-8" />
