@@ -9,11 +9,39 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
   if (!open) return null;
 
   const handleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse) => {
-      await getUserProfile(codeResponse);
+    onSuccess: async (tokenResponse) => {
+      try {
+        const resp = await axios.get(
+          `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenResponse.access_token}`,
+          {
+            headers: {
+              Authorization: `Bearer ${tokenResponse.access_token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+
+        toast.success(`✅ Welcome ${resp.data.name}!`, {
+          position: "bottom-right",
+          autoClose: 3000,
+          theme: "colored",
+          transition: Bounce,
+        });
+
+        // Pass user data back to Navbar
+        if (onLoginSuccess) onLoginSuccess(resp.data);
+      } catch (err) {
+        console.error(err);
+        toast.error("⚠️ Failed to fetch user profile.", {
+          position: "bottom-right",
+          autoClose: 4000,
+          theme: "colored",
+          transition: Bounce,
+        });
+      }
     },
-    onError: (error) => {
-      console.error(error);
+    onError: (err) => {
+      console.error(err);
       toast.error("⚠️ Login failed. Please try again.", {
         position: "bottom-right",
         autoClose: 4000,
@@ -22,47 +50,6 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
       });
     },
   });
-
-  const getUserProfile = async (tokenInfo) => {
-    try {
-      const resp = await axios.get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenInfo?.access_token}`,
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log(resp.data);
-      localStorage.setItem("user", JSON.stringify(resp.data));
-      
-
-      toast.success(`✅ Welcome ${resp.data.name}!`, {
-        position: "bottom-right",
-        autoClose: 3000,
-        theme: "colored",
-        transition: Bounce,
-      });
-
-      // Close dialog
-      onClose();
-
-      // Trigger parent callback to generate trip
-      if (typeof onLoginSuccess === "function") {
-        onLoginSuccess();
-      }
-    } catch (err) {
-      console.error("Error fetching user profile:", err);
-      toast.error("⚠️ Failed to fetch user profile.", {
-        position: "bottom-right",
-        autoClose: 4000,
-        theme: "colored",
-        transition: Bounce,
-      });
-    }
-  };
 
   return (
     <motion.div
@@ -80,7 +67,7 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
         <div className="flex flex-col items-center text-center space-y-1">
           <div className="flex items-center justify-center gap-3 sm:gap-4">
             <motion.img
-              src="../logo.svg"
+              src="/logo.svg"
               alt="App Logo"
               className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-md"
               initial={{ rotate: -10, opacity: 0 }}
@@ -88,7 +75,7 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
               transition={{ duration: 0.4 }}
             />
             <h1 className="text-lg sm:text-2xl font-bold text-gray-800 tracking-wide">
-              WanderWise
+              WanderNow
             </h1>
           </div>
           <p className="text-gray-500 text-xs sm:text-sm">
@@ -101,17 +88,16 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
             Sign In With Google
           </h2>
           <p className="text-gray-600 text-xs sm:text-sm leading-relaxed px-1">
-            Sign in securely using your Google account to continue your journey.
+            Sign in securely using your Google account.
           </p>
         </div>
 
         <div className="flex justify-center pt-2 sm:pt-4">
           <button
             onClick={handleLogin}
-            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm sm:text-base py-2 sm:py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center cursor-pointer tracking-wider justify-center gap-2"
+            className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm sm:text-base py-2 sm:py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
-            <FcGoogle size={25} />
-            Sign In With Google
+            <FcGoogle size={25} /> Sign In With Google
           </button>
         </div>
 

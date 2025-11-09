@@ -17,7 +17,7 @@ const HeroSection = () => {
       <div className="absolute top-0 left-0 w-full h-full bg-black/40 z-0"></div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center max-w-6xl">
+      <div className="relative z-10 flex flex-col items-center justify-center max-w-8xl">
         {/* Heading */}
         <motion.h1
           className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-purple-300 via-gray-200 to-red-50 drop-shadow-lg mb-4 leading-snug sm:leading-tight"
