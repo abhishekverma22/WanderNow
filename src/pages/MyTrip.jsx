@@ -93,10 +93,10 @@ const MyTrip = () => {
                 <div className="relative z-10">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
                     <div className="flex-1">
-                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2 leading-tight">
+                      <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2 leading-tight capitalize">
                         {trip.userSelection?.destination || "-"}
                       </h3>
-                      <p className="text-slate-300 text-sm sm:text-base md:text-lg font-medium">
+                      <p className="text-slate-300 text-sm sm:text-base md:text-lg font-medium capitalize">
                         {trip.userSelection?.city || "-"},{" "}
                         {trip.userSelection?.country || "-"}
                       </p>
