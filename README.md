@@ -143,31 +143,31 @@ npm run dev
 
 ### Login Page
 
-![Login Page](/login-page.webp)
+![Login Page](./public/login-page.webp)
 
 ### Trip Creation Page
 
-![Trip Creation Page](/Trip-create-page.webp)
+![Trip Creation Page](./public//Trip-create-page.webp)
 
 ### View Trip Details
 
-![View Trip Details](/view-trip-details.webp)
+![View Trip Details](./public//view-trip-details.webp)
 
 ### Daily Itinerary - Part 1
 
-![Daily Itinerary 1](/view-trip-details-daily-itineray-1.webp)
+![Daily Itinerary 1](./public//view-trip-details-daily-itineray-1.webp)
 
 ### Daily Itinerary - Part 2
 
-![Daily Itinerary 2](/view-trip-details-daily-itineray-2.webp)
+![Daily Itinerary 2](./public//view-trip-details-daily-itineray-2.webp)
 
 ### Daily Itinerary - Part 3
 
-![Daily Itinerary 3](/view-trip-details-daily-itineray-3.webp)
+![Daily Itinerary 3](./public//view-trip-details-daily-itineray-3.webp)
 
 ### All Trips Overview
 
-![All Trips Overview](/Show-you-all-trip.webp)
+![All Trips Overview](./public//Show-you-all-trip.webp)
 
 ## Technology Stack
 
