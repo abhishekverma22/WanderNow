@@ -30,6 +30,9 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
 
         // Pass user data back to Navbar
         if (onLoginSuccess) onLoginSuccess(resp.data);
+        
+        // Close dialog after successful login
+        onClose();
       } catch (err) {
         console.error(err);
         toast.error("⚠️ Failed to fetch user profile.", {
@@ -57,12 +60,14 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4 sm:px-6"
+      onClick={onClose} // Close on backdrop click
     >
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-lg p-5 sm:p-8 space-y-5"
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside dialog
       >
         <div className="flex flex-col items-center text-center space-y-1">
           <div className="flex items-center justify-center gap-3 sm:gap-4">
@@ -94,7 +99,7 @@ const LoginDialog = ({ open, onClose, onLoginSuccess }) => {
 
         <div className="flex justify-center pt-2 sm:pt-4">
           <button
-            onClick={handleLogin}
+            onClick={() => handleLogin()}
             className="w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold text-sm sm:text-base py-2 sm:py-3 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
             <FcGoogle size={25} /> Sign In With Google

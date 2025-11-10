@@ -6,6 +6,12 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react-google-places-autocomplete'],
   },
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+      'Cross-Origin-Embedder-Policy': 'unsafe-none',
+    },
+  },
   plugins: [react(), tailwindcss()],
   build: {
     chunkSizeWarningLimit: 2000,
