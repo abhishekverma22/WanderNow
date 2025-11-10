@@ -1,4 +1,3 @@
-// src/components/CreateTrip/CreateTrip.jsx
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { ToastContainer, toast, Bounce } from "react-toastify";
@@ -18,6 +17,7 @@ import GenerateButton from "../components/GenerateButton";
 
 import { AI_PROMPT } from "../constant/option";
 
+// Generate final prompt for AI
 const getFinalPrompt = (formData) => {
   const { city, country, destination, numberOfDays, traveler, budget } =
     formData;
@@ -36,10 +36,44 @@ const CreateTrip = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const navigate = useNavigate();
 
+  // Handle input changes from child components
   const handleInputChange = (name, value) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Save AI trip to Firestore
+  const saveAiTrip = async (tripData) => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      toast.error("⚠️ User not logged in", { position: "top-right" });
+      return;
+    }
+
+    const docID = Date.now().toString();
+    const travelerType = formData.traveler?.title?.toLowerCase() || "solo";
+
+    try {
+      await setDoc(doc(db, "AI_TRIPS", docID), {
+        userSelection: formData,
+        tripData,
+        userEmail: user.email,
+        userName: user.name,
+        userIMG: user.picture,
+      });
+
+      navigate(`/view-trip/${travelerType}/${docID}`);
+    } catch (err) {
+      console.error("❌ Error saving trip to Firestore:", err);
+      toast.error("⚠️ Failed to save trip. Try again.", {
+        position: "bottom-right",
+        autoClose: 4000,
+        theme: "colored",
+        transition: Bounce,
+      });
+    }
+  };
+
+  // Generate AI trip
   const handleGenerateTrip = async () => {
     const user = localStorage.getItem("user");
 
@@ -50,14 +84,8 @@ const CreateTrip = () => {
 
     const { city, country, destination, numberOfDays, budget, traveler } =
       formData;
-    if (
-      !city ||
-      !country ||
-      !destination ||
-      !numberOfDays ||
-      !budget ||
-      !traveler
-    ) {
+
+    if (!city || !country || !destination || !numberOfDays || !budget || !traveler) {
       toast.warning("✈️ Please share trip details before we take off 🚀", {
         position: "top-right",
         autoClose: 4000,
@@ -69,27 +97,29 @@ const CreateTrip = () => {
 
     const FINAL_PROMPT = getFinalPrompt(formData);
     console.log("📝 Sending prompt to Gemini:", FINAL_PROMPT);
+
     setLoading(true);
-
     try {
+      // Ensure sendMessageToGemini always returns a Promise
       const resultText = await sendMessageToGemini(FINAL_PROMPT);
-      console.log("✅ Gemini Response:", resultText);
-      saveAiTrip(resultText);
 
-      if (resultText && !resultText.includes("⚠️")) {
-        toast.success("🌍 Your personalized trip is ready!", {
-          position: "bottom-right",
-          autoClose: 4000,
-          theme: "colored",
-          transition: Bounce,
-        });
-      } else {
+      console.log("✅ Gemini Response:", resultText);
+
+      if (!resultText || resultText.includes("⚠️")) {
         toast.error(resultText || "⚠️ No response from Gemini", {
           position: "bottom-right",
           autoClose: 5000,
           theme: "colored",
           transition: Bounce,
         });
+      } else {
+        toast.success("🌍 Your personalized trip is ready!", {
+          position: "bottom-right",
+          autoClose: 4000,
+          theme: "colored",
+          transition: Bounce,
+        });
+        saveAiTrip(resultText);
       }
     } catch (err) {
       console.error("❌ Error generating trip:", err);
@@ -102,22 +132,6 @@ const CreateTrip = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const user = JSON.parse(localStorage.getItem("user"));
-  const saveAiTrip = async (tripData) => {
-    const docID = Date.now().toString();
-    const travelerType = formData.traveler.title.toLowerCase();
-
-    await setDoc(doc(db, "AI_TRIPS", docID), {
-      userSelection: formData,
-      tripData,
-      userEmail: user.email,
-      userName: user.name,
-      userIMG: user.picture,
-    });
-
-    navigate(`/view-trip/${travelerType}/${docID}`);
   };
 
   return (
@@ -143,35 +157,17 @@ const CreateTrip = () => {
           </p>
         </motion.div>
 
-        <DestinationInput
-          handleInputChange={handleInputChange}
-          loading={loading}
-        />
+        <DestinationInput handleInputChange={handleInputChange} loading={loading} />
         <DaysInput handleInputChange={handleInputChange} loading={loading} />
-        <BudgetSelector
-          handleInputChange={handleInputChange}
-          formData={formData}
-          loading={loading}
-        />
-        <TravelerSelector
-          handleInputChange={handleInputChange}
-          formData={formData}
-          loading={loading}
-        />
+        <BudgetSelector handleInputChange={handleInputChange} formData={formData} loading={loading} />
+        <TravelerSelector handleInputChange={handleInputChange} formData={formData} loading={loading} />
 
-        <GenerateButton
-          loading={loading}
-          handleGenerateTrip={handleGenerateTrip}
-        />
+        <GenerateButton loading={loading} handleGenerateTrip={handleGenerateTrip} />
       </div>
 
       <LoginDialog open={openDialog} onClose={() => setOpenDialog(false)} />
-      <ToastContainer
-        position="bottom-right"
-        autoClose={4000}
-        theme="colored"
-        transition={Bounce}
-      />
+
+      <ToastContainer position="bottom-right" autoClose={4000} theme="colored" transition={Bounce} />
     </div>
   );
 };
