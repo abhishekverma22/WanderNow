@@ -127,7 +127,7 @@ npm run dev
 
 ## **Folder Structure**
 
-![File and Folder Structure](assets/file-and-folder-structure.png)
+![File and Folder Structure](./src/assets/fileAndFloder.png)
 
 ## Usage
 
